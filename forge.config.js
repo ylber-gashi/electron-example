@@ -3,14 +3,7 @@ const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 
 module.exports = {
   packagerConfig: {
-    asar: true,
-    osxSign: {
-      'hardened-runtime': true,
-      entitlements: 'entitlements.plist',
-      'entitlements-inherit': 'entitlements.plist',
-      'signature-flags': 'library',
-    },
-    osxNotarize: false, // Disable notarization
+    asar: true
   },
   rebuildConfig: {},
   makers: [

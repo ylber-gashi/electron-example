@@ -21,14 +21,14 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 22
-          cache: 'npm'
 
       - name: Get version from tag
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
       - name: Update package.json version
-        run: npm version ${{ steps.get_version.outputs.VERSION }} --no-git-tag-version
+        run: |
+          npm version ${{ steps.get_version.outputs.VERSION }} --no-git-tag-version
 
       - name: Install Dependencies
         run: npm ci
