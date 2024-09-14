@@ -30,12 +30,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: npm run make
 
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.os }}-build
+          path: out/make/**/*
+
+      - name: Publish Release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.release_upload_url }}
-          asset_path: ./out/make/${{ matrix.artifact_name }}
-          asset_name: ${{ matrix.artifact_name }}
-          asset_content_type: application/zip
+        run: npm run publish
