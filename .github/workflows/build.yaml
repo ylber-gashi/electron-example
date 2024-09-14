@@ -30,21 +30,18 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: npm run make
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.os }}-build
-          path: out/make/**/*
-
-      - name: Create Release
+      - name: Create Release and Upload Assets
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           tag_name="${GITHUB_REF#refs/tags/}"
-          gh release create "$tag_name" \
-            --title "Release $tag_name" \
-            --draft \
-            ./out/make/**/*
+          gh release create "$tag_name" --title "Release $tag_name" --draft
+          
+          for file in out/make/**/*; do
+            if [ -f "$file" ]; then
+              gh release upload "$tag_name" "$file" --clobber
+            fi
+          done
 
       - name: Publish Release
         env:
