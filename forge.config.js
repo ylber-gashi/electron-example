@@ -5,7 +5,6 @@ module.exports = {
   packagerConfig: {
     asar: true,
     osxSign: {
-      identity: null, // Use null to force it to use a self-signed certificate
       'hardened-runtime': true,
       entitlements: 'entitlements.plist',
       'entitlements-inherit': 'entitlements.plist',
