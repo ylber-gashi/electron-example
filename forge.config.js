@@ -32,7 +32,7 @@ module.exports = {
           owner: 'ylber-gashi',
           name: 'electron-example',
         },
-        prerelease: false,
+        prerelease: true,
       }
     }
   ],
