@@ -39,4 +39,7 @@ jobs:
       - name: Publish Release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: npm run publish -- --release-version=${{ github.ref_name }}
+        run: |
+          VERSION=${GITHUB_REF##*/}
+          echo "Publishing release for version $VERSION"
+          npm run publish -- --release-version=$VERSION
