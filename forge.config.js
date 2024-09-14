@@ -4,6 +4,14 @@ const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 module.exports = {
   packagerConfig: {
     asar: true,
+    osxSign: {
+      identity: null, // Use null to force it to use a self-signed certificate
+      'hardened-runtime': true,
+      entitlements: 'entitlements.plist',
+      'entitlements-inherit': 'entitlements.plist',
+      'signature-flags': 'library',
+    },
+    osxNotarize: false, // Disable notarization
   },
   rebuildConfig: {},
   makers: [
@@ -32,7 +40,7 @@ module.exports = {
           owner: 'ylber-gashi',
           name: 'electron-example',
         },
-        prerelease: true,
+        prerelease: false,
       }
     }
   ],
