@@ -1,9 +1,9 @@
-name: Build and Release
+name: Release
 
 on:
   push:
-    branches: [main]
-  workflow_dispatch:
+    tags:
+      - 'v*'
 
 jobs:
   release:
@@ -20,7 +20,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 22
 
       - name: Install Dependencies
         run: npm ci
@@ -36,7 +36,19 @@ jobs:
           name: ${{ matrix.os }}-build
           path: out/make/**/*
 
-      - name: Publish Release
+      - name: Create Release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: npm run publish
+        run: |
+          tag_name="${GITHUB_REF#refs/tags/}"
+          gh release create "$tag_name" \
+            --title "Release $tag_name" \
+            --draft \
+            ./out/make/**/*
+
+      - name: Publish Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag_name="${GITHUB_REF#refs/tags/}"
+          gh release edit "$tag_name" --draft=false
