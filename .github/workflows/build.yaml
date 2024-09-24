@@ -31,7 +31,7 @@ jobs:
 
       - name: Install Dependencies
         run: npm ci
-        
+
       - name: Build Electron App
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -44,20 +44,31 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         run: npm run publish
 
-      # Install AWS CLI (for R2)
+      # Install AWS CLI (Corrected)
       - name: Install AWS CLI
         run: |
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            # Windows commands
             curl "https://awscli.amazonaws.com/AWSCLIV2.msi" -o "AWSCLIV2.msi"
             msiexec.exe /i AWSCLIV2.msi /quiet
+          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            # macOS commands
+            curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
+            sudo installer -pkg AWSCLIV2.pkg -target /
           else
+            # Unix-based commands (Linux)
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip awscliv2.zip
             sudo ./aws/install
           fi
 
-      # Upload Release Assets to Cloudflare R2
+      # Verify AWS CLI Installation
+      - name: Verify AWS CLI Installation
+        run: aws --version
+
+      # Upload Release Assets to Cloudflare R2 (Simplified)
       - name: Upload Assets to Cloudflare R2
+        shell: bash
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
@@ -65,14 +76,6 @@ jobs:
           R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
           BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
         run: |
-          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            # Windows commands
-            aws configure set default.s3.endpoint $R2_ENDPOINT
-            aws configure set default.s3.signature_version s3v4
-            aws s3 cp out/make/ s3://$BUCKET_NAME/ --recursive --acl public-read
-          else
-            # Unix-based commands
-            aws configure set default.s3.endpoint $R2_ENDPOINT
-            aws configure set default.s3.signature_version s3v4
-            aws s3 cp out/make/ s3://$BUCKET_NAME/ --recursive --acl public-read
-          fi
+          aws configure set default.s3.endpoint $R2_ENDPOINT
+          aws configure set default.s3.signature_version s3v4
+          aws s3 cp out/make/ s3://$BUCKET_NAME/ --recursive --acl public-read
