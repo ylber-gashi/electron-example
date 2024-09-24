@@ -1,7 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const updateElectronApp = require('update-electron-app');
+const { updateElectronApp } = require('update-electron-app');
 
 console.log('Main process starting');
 
@@ -10,7 +10,6 @@ updateElectronApp({
   repo: 'ylber-gashi/electron-example', // Format: 'owner/repo'
   updateInterval: '1 hour', // Check for updates every hour
   notifyUser: true, // Notify the user when an update is available
-  logger: require('electron-log'), // Optional: Use a logger
 });
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -83,6 +82,10 @@ ipcMain.handle('saveTasks', (event, tasks) => {
   console.log('saveTasks handler called with tasks:', tasks);
   fs.writeFileSync(tasksFile, JSON.stringify(tasks));
   console.log('Tasks saved successfully');
+});
+
+ipcMain.handle('get-app-version', async () => {
+  return app.getVersion();
 });
 
 console.log('Main process setup complete');
