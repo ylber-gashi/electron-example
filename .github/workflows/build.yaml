@@ -76,12 +76,8 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: auto
           R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
           BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
         run: |
-          echo "R2 Endpoint: ${{ secrets.R2_ENDPOINT }}"
-          echo "Bucket Name: ${{ secrets.R2_BUCKET_NAME }}"
-          aws configure set default.s3.endpoint ${{ secrets.R2_ENDPOINT }}
-          aws configure set default.s3.signature_version s3v4
-          aws s3 cp out/make/ s3://${{ secrets.R2_BUCKET_NAME }}/ --recursive --acl public-read
+          echo "Starting upload to Cloudflare R2..."
+          aws s3 cp out/make/ s3://$BUCKET_NAME/ --recursive --acl public-read --endpoint-url $R2_ENDPOINT --debug
