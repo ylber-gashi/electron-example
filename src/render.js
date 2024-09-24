@@ -60,3 +60,23 @@ window.electronAPI.getTasks()
     renderTasks();
   })
   .catch(error => console.error('Error getting tasks:', error));
+
+// Function to display version
+function displayVersion() {
+  window.electronAPI.getAppVersion()
+    .then(version => {
+      const versionElement = document.getElementById('app-version');
+      versionElement.textContent = `Version: ${version}`;
+    })
+    .catch(error => console.error('Error fetching app version:', error));
+}
+
+// Call displayVersion after fetching initial tasks
+window.electronAPI.getTasks()
+  .then((savedTasks) => {
+    console.log('Received saved tasks:', savedTasks);
+    tasks = savedTasks;
+    renderTasks();
+    displayVersion(); // Display version after tasks are loaded
+  })
+  .catch(error => console.error('Error getting tasks:', error));

@@ -66,3 +66,10 @@ h1 {
   border-radius: 4px;
   cursor: pointer;
 }
+
+footer {
+  margin-top: 20px;
+  text-align: center;
+  color: #666;
+  font-size: 0.9em;
+}

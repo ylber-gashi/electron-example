@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electron Releases - Sleek & Modern</title>
+    <style>
+        :root {
+            --bg-color: #f0f3f5;
+            --text-color: #333333;
+            --accent-color: #007aff;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --border-radius: 16px;
+            --font-family: 'San Francisco', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            --transition-speed: 0.3s;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+            background: linear-gradient(135deg, #ececec, #f5f5f7);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-attachment: fixed;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #6e6e73;
+        }
+
+        #releases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .release-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .release-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .release-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .release-date {
+            font-size: 0.9rem;
+            color: #8e8e93;
+            margin-bottom: 1rem;
+        }
+
+        .download-links {
+            margin-top: auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .download-btn {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 999px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background-color var(--transition-speed) ease, transform var(--transition-speed) ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .download-btn:hover {
+            background-color: #0051a8;
+            transform: translateY(-2px);
+        }
+
+        .download-btn:active {
+            transform: translateY(0);
+        }
+
+        #loading {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #8e8e93;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+            }
+
+            .release-card {
+                padding: 1rem;
+            }
+
+            .download-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Scrollbar styling for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Electron Releases</h1>
+            <p class="subtitle">Download the latest versions of our app</p>
+        </header>
+        <main id="releases">
+            <div id="loading">Loading latest releases...</div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const releasesContainer = document.getElementById('releases');
+            const loadingElement = document.getElementById('loading');
+
+            const apiUrl = 'https://electron-example-list-release.ylberg37.workers.dev/';
+
+            const formatDate = (dateString) => {
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                return new Date(dateString).toLocaleDateString(undefined, options);
+            };
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    loadingElement.remove();
+                    data.forEach(asset => {
+                        // Assuming assets are named with version and platform, e.g., 'v1.0.0-windows.exe'
+                        const [version, platform] = asset.name.split('-');
+                        const release = document.createElement('div');
+                        release.classList.add('release-card');
+
+                        const title = document.createElement('h2');
+                        title.classList.add('release-title');
+                        title.textContent = version || 'Latest Release';
+
+                        const downloadLinks = document.createElement('div');
+                        downloadLinks.classList.add('download-links');
+
+                        const link = document.createElement('a');
+                        link.href = asset.url;
+                        link.textContent = platform.toUpperCase().split('.')[0]; // e.g., 'WINDOWS', 'MACOS'
+                        link.classList.add('download-btn');
+                        link.setAttribute('download', '');
+                        downloadLinks.appendChild(link);
+
+                        release.appendChild(title);
+                        release.appendChild(downloadLinks);
+                        releasesContainer.appendChild(release);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching releases:', error);
+                    loadingElement.textContent = 'Error loading releases. Please try again later.';
+                });
+        });
+    </script>
+</body>
+</html>

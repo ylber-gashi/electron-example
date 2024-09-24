@@ -1,6 +1,5 @@
 const { contextBridge, ipcRenderer } = require('electron');
-
-console.log('Preload script running');
+const { app } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
   getTasks: () => {
@@ -11,6 +10,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     console.log('saveTasks called from renderer with tasks:', tasks);
     return ipcRenderer.invoke('saveTasks', tasks);
   },
+  getAppVersion: () => {
+    return ipcRenderer.invoke('get-app-version');
+  }
 });
 
 console.log('electronAPI exposed to renderer');

@@ -1,8 +1,17 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const updateElectronApp = require('update-electron-app');
 
 console.log('Main process starting');
+
+// Initialize auto-update
+updateElectronApp({
+  repo: 'ylber-gashi/electron-example', // Format: 'owner/repo'
+  updateInterval: '1 hour', // Check for updates every hour
+  notifyUser: true, // Notify the user when an update is available
+  logger: require('electron-log'), // Optional: Use a logger
+});
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
