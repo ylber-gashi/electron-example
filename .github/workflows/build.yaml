@@ -66,6 +66,10 @@ jobs:
       - name: Verify AWS CLI Installation
         run: aws --version
 
+      - name: Test Endpoint Connectivity
+        run: |
+          curl -I ${{ secrets.R2_ENDPOINT }}
+
       # Upload Release Assets to Cloudflare R2 (Simplified)
       - name: Upload Assets to Cloudflare R2
         shell: bash
