@@ -44,33 +44,39 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         run: npm run publish
 
-      # Install AWS CLI (Corrected)
-      - name: Install AWS CLI
+      # ###### Install AWS CLI on Windows ######
+      - name: Install AWS CLI on Windows
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
         run: |
-          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            # Windows commands
-            curl "https://awscli.amazonaws.com/AWSCLIV2.msi" -o "AWSCLIV2.msi"
-            msiexec.exe /i AWSCLIV2.msi /quiet
-          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            # macOS commands
-            curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
-            sudo installer -pkg AWSCLIV2.pkg -target /
-          else
-            # Unix-based commands (Linux)
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
-          fi
+          Write-Host "Downloading AWS CLI MSI installer..."
+          Invoke-WebRequest -Uri "https://awscli.amazonaws.com/AWSCLIV2.msi" -OutFile "AWSCLIV2.msi"
+          Write-Host "Installing AWS CLI..."
+          Start-Process msiexec.exe -ArgumentList '/i AWSCLIV2.msi /quiet /qn' -NoNewWindow -Wait
+          Write-Host "AWS CLI installed successfully."
 
-      # Verify AWS CLI Installation
+      # ###### Install AWS CLI on macOS ######
+      - name: Install AWS CLI on macOS
+        if: matrix.os == 'macos-latest'
+        run: |
+          curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
+          sudo installer -pkg AWSCLIV2.pkg -target /
+          aws --version
+
+      # ###### Install AWS CLI on Linux ######
+      - name: Install AWS CLI on Linux
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+          aws --version
+
+      # ###### Verify AWS CLI Installation ######
       - name: Verify AWS CLI Installation
         run: aws --version
 
-      - name: Test Endpoint Connectivity
-        run: |
-          curl -I ${{ secrets.R2_ENDPOINT }}
-
-      # Upload Release Assets to Cloudflare R2 (Simplified)
+      # ###### Upload Release Assets to Cloudflare R2 ######
       - name: Upload Assets to Cloudflare R2
         shell: bash
         env:
