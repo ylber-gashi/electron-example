@@ -92,7 +92,4 @@ jobs:
           
           VERSION="${{ steps.get_version.outputs.VERSION }}"
           
-          aws s3 cp out/make/ s3://$BUCKET_NAME/$PLATFORM/$VERSION/ --recursive --acl public-read --endpoint-url $R2_ENDPOINT --debug
-          
-          # Upload a copy to the latest folder
-          aws s3 cp out/make/ s3://$BUCKET_NAME/$PLATFORM/latest/ --recursive --acl public-read --endpoint-url $R2_ENDPOINT --debug
+          aws s3 cp out/make/ s3://$BUCKET_NAME/$PLATFORM/$VERSION/ --recursive --acl public-read --endpoint-url --region us-east-1 $R2_ENDPOINT --debug
