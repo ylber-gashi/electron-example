@@ -132,6 +132,48 @@
             color: #8e8e93;
         }
 
+        .platform-section {
+            margin-bottom: 2rem;
+        }
+
+        .platform-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+
+        .release-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+            margin-bottom: 1rem;
+        }
+
+        .release-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .asset-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .asset-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .asset-info {
+            font-size: 0.9rem;
+            color: #8e8e93;
+        }
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 2.5rem;
@@ -181,7 +223,6 @@
         </main>
     </div>
 
-    <!-- Include SemVer library for version comparison -->
     <script src="https://cdn.jsdelivr.net/npm/semver@7.5.4/dist/semver.min.js"></script>
 
     <script>
@@ -197,88 +238,73 @@
                 return new Date(dateString).toLocaleDateString(undefined, options);
             };
 
+            const formatBytes = (bytes) => {
+                const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                if (bytes === 0) return '0 Byte';
+                const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+                return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
+            };
+
             fetch(apiUrl)
                 .then(response => response.json())
                 .then(data => {
-                    if (!Array.isArray(data) || data.length === 0) {
-                        loadingElement.textContent = 'No releases found.';
-                        return;
-                    }
-
-                    // Remove the loading indicator
                     loadingElement.remove();
 
-                    // Group assets by version
-                    const releasesMap = {};
+                    const platforms = ['macos', 'windows', 'linux'];
+                    
+                    platforms.forEach(platform => {
+                        if (!data[platform] || data[platform].length === 0) return;
 
-                    data.forEach(asset => {
-                        // Extract version from filename, assuming format 'v1.0.0-platform.ext' or '1.0.0-platform.ext'
-                        console.log(asset.filename);
-                        
-                        const versionMatch = asset.filename.match(/(\d+\.\d+\.\d+)/);
-                        const version = versionMatch ? versionMatch[1] : 'Unknown Version';
+                        const platformSection = document.createElement('section');
+                        platformSection.classList.add('platform-section');
 
-                        if (!releasesMap[version]) {
-                            releasesMap[version] = {
-                                version: version,
-                                assets: {},
-                                release_date: new Date(asset.last_modified)
-                            };
-                        }
+                        const platformTitle = document.createElement('h2');
+                        platformTitle.classList.add('platform-title');
+                        platformTitle.textContent = platform.charAt(0).toUpperCase() + platform.slice(1);
+                        platformSection.appendChild(platformTitle);
 
-                        // Determine platform from filename, assuming format 'v1.0.0-platform.ext' or '1.0.0-platform.ext'
-                        const platformMatch = asset.filename.match(/-(windows|macos|linux)/i);
-                        const platform = platformMatch ? platformMatch[1].toLowerCase() : 'unknown';
+                        data[platform].forEach(release => {
+                            const card = document.createElement('div');
+                            card.classList.add('release-card');
 
-                        releasesMap[version].assets[platform] = asset.url;
+                            const title = document.createElement('h3');
+                            title.classList.add('release-title');
+                            title.textContent = `v${release.version}`;
 
-                        // Update release_date if this asset has a newer date
-                        const assetDate = new Date(asset.last_modified);
-                        if (assetDate > releasesMap[version].release_date) {
-                            releasesMap[version].release_date = assetDate;
-                        }
-                    });
+                            const date = document.createElement('p');
+                            date.classList.add('release-date');
+                            date.textContent = `Release Date: ${formatDate(release.uploaded)}`;
 
-                    // Convert the releasesMap to an array and sort by release_date descending
-                    const releases = Object.values(releasesMap).sort((a, b) => b.release_date - a.release_date);
+                            const assetList = document.createElement('ul');
+                            assetList.classList.add('asset-list');
 
-                    releases.forEach(release => {
-                        const card = document.createElement('div');
-                        card.classList.add('release-card');
+                            release.assets.forEach(asset => {
+                                const assetItem = document.createElement('li');
+                                assetItem.classList.add('asset-item');
 
-                        const title = document.createElement('h2');
-                        title.classList.add('release-title');
-                        title.textContent = `v${release.version}`;
+                                const assetLink = document.createElement('a');
+                                assetLink.href = asset.url;
+                                assetLink.textContent = asset.filename;
+                                assetLink.classList.add('download-btn');
+                                assetLink.setAttribute('download', '');
+                                assetLink.setAttribute('target', '_blank');
 
-                        const date = document.createElement('p');
-                        date.classList.add('release-date');
-                        date.textContent = `Release Date: ${formatDate(release.release_date.toISOString())}`;
+                                const assetInfo = document.createElement('span');
+                                assetInfo.classList.add('asset-info');
+                                assetInfo.textContent = `${formatBytes(asset.size)} • ${formatDate(asset.uploaded)}`;
 
-                        const downloadLinks = document.createElement('div');
-                        downloadLinks.classList.add('download-links');
+                                assetItem.appendChild(assetLink);
+                                assetItem.appendChild(assetInfo);
+                                assetList.appendChild(assetItem);
+                            });
 
-                        // Define platform names and icons if desired
-                        const platformNames = {
-                            windows: 'Windows',
-                            macos: 'macOS',
-                            linux: 'Linux',
-                            unknown: 'Download'
-                        };
+                            card.appendChild(title);
+                            card.appendChild(date);
+                            card.appendChild(assetList);
+                            platformSection.appendChild(card);
+                        });
 
-                        for (const [platform, url] of Object.entries(release.assets)) {
-                            const link = document.createElement('a');
-                            link.href = url;
-                            link.textContent = platformNames[platform] || 'Download';
-                            link.classList.add('download-btn');
-                            link.setAttribute('download', '');
-                            link.setAttribute('target', '_blank'); // Open in new tab
-                            downloadLinks.appendChild(link);
-                        }
-
-                        card.appendChild(title);
-                        card.appendChild(date);
-                        card.appendChild(downloadLinks);
-                        releasesContainer.appendChild(card);
+                        releasesContainer.appendChild(platformSection);
                     });
                 })
                 .catch(error => {
