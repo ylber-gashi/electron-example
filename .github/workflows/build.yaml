@@ -44,7 +44,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         run: npm run publish
 
-      # ###### Install AWS CLI on Windows ######
+      # Install AWS CLI on Windows
       - name: Install AWS CLI on Windows
         if: matrix.os == 'windows-latest'
         shell: pwsh
@@ -55,7 +55,7 @@ jobs:
           Start-Process msiexec.exe -ArgumentList '/i AWSCLIV2.msi /quiet /qn' -NoNewWindow -Wait
           Write-Host "AWS CLI installed successfully."
 
-      # ###### Install AWS CLI on macOS ######
+      # Install AWS CLI on macOS
       - name: Install AWS CLI on macOS
         if: matrix.os == 'macos-latest'
         run: |
@@ -63,7 +63,7 @@ jobs:
           sudo installer -pkg AWSCLIV2.pkg -target /
           aws --version
 
-      # ###### Install AWS CLI on Linux ######
+      # Install AWS CLI on Linux
       - name: Install AWS CLI on Linux
         if: matrix.os == 'ubuntu-latest'
         run: |
@@ -72,11 +72,11 @@ jobs:
           sudo ./aws/install
           aws --version
 
-      # ###### Verify AWS CLI Installation ######
+      # Verify AWS CLI Installation
       - name: Verify AWS CLI Installation
         run: aws --version
 
-      # ###### Upload Release Assets to Cloudflare R2 ######
+      # Upload Release Assets to Cloudflare R2
       - name: Upload Assets to Cloudflare R2
         shell: bash
         env:
@@ -86,4 +86,22 @@ jobs:
           BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
         run: |
           echo "Starting upload to Cloudflare R2..."
-          aws s3 cp out/make/ s3://$BUCKET_NAME/ --recursive --acl public-read --endpoint-url $R2_ENDPOINT --debug
+          PLATFORM=""
+          case "${{ matrix.os }}" in
+            macos-latest)
+              PLATFORM="macos"
+              ;;
+            ubuntu-latest)
+              PLATFORM="linux"
+              ;;
+            windows-latest)
+              PLATFORM="windows"
+              ;;
+          esac
+          
+          VERSION="${{ steps.get_version.outputs.VERSION }}"
+          
+          aws s3 cp out/make/ s3://$BUCKET_NAME/$PLATFORM/$VERSION/ --recursive --acl public-read --endpoint-url $R2_ENDPOINT --debug
+          
+          # Upload a copy to the latest folder
+          aws s3 cp out/make/ s3://$BUCKET_NAME/$PLATFORM/latest/ --recursive --acl public-read --endpoint-url $R2_ENDPOINT --debug

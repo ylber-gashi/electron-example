@@ -181,6 +181,9 @@
         </main>
     </div>
 
+    <!-- Include SemVer library for version comparison -->
+    <script src="https://cdn.jsdelivr.net/npm/semver@7.5.4/dist/semver.min.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const releasesContainer = document.getElementById('releases');
@@ -197,30 +200,85 @@
             fetch(apiUrl)
                 .then(response => response.json())
                 .then(data => {
+                    if (!Array.isArray(data) || data.length === 0) {
+                        loadingElement.textContent = 'No releases found.';
+                        return;
+                    }
+
+                    // Remove the loading indicator
                     loadingElement.remove();
+
+                    // Group assets by version
+                    const releasesMap = {};
+
                     data.forEach(asset => {
-                        // Assuming assets are named with version and platform, e.g., 'v1.0.0-windows.exe'
-                        const [version, platform] = asset.name.split('-');
-                        const release = document.createElement('div');
-                        release.classList.add('release-card');
+                        // Extract version from filename, assuming format 'v1.0.0-platform.ext' or '1.0.0-platform.ext'
+                        console.log(asset.filename);
+                        
+                        const versionMatch = asset.filename.match(/(\d+\.\d+\.\d+)/);
+                        const version = versionMatch ? versionMatch[1] : 'Unknown Version';
+
+                        if (!releasesMap[version]) {
+                            releasesMap[version] = {
+                                version: version,
+                                assets: {},
+                                release_date: new Date(asset.last_modified)
+                            };
+                        }
+
+                        // Determine platform from filename, assuming format 'v1.0.0-platform.ext' or '1.0.0-platform.ext'
+                        const platformMatch = asset.filename.match(/-(windows|macos|linux)/i);
+                        const platform = platformMatch ? platformMatch[1].toLowerCase() : 'unknown';
+
+                        releasesMap[version].assets[platform] = asset.url;
+
+                        // Update release_date if this asset has a newer date
+                        const assetDate = new Date(asset.last_modified);
+                        if (assetDate > releasesMap[version].release_date) {
+                            releasesMap[version].release_date = assetDate;
+                        }
+                    });
+
+                    // Convert the releasesMap to an array and sort by release_date descending
+                    const releases = Object.values(releasesMap).sort((a, b) => b.release_date - a.release_date);
+
+                    releases.forEach(release => {
+                        const card = document.createElement('div');
+                        card.classList.add('release-card');
 
                         const title = document.createElement('h2');
                         title.classList.add('release-title');
-                        title.textContent = version || 'Latest Release';
+                        title.textContent = `v${release.version}`;
+
+                        const date = document.createElement('p');
+                        date.classList.add('release-date');
+                        date.textContent = `Release Date: ${formatDate(release.release_date.toISOString())}`;
 
                         const downloadLinks = document.createElement('div');
                         downloadLinks.classList.add('download-links');
 
-                        const link = document.createElement('a');
-                        link.href = asset.url;
-                        link.textContent = platform.toUpperCase().split('.')[0]; // e.g., 'WINDOWS', 'MACOS'
-                        link.classList.add('download-btn');
-                        link.setAttribute('download', '');
-                        downloadLinks.appendChild(link);
+                        // Define platform names and icons if desired
+                        const platformNames = {
+                            windows: 'Windows',
+                            macos: 'macOS',
+                            linux: 'Linux',
+                            unknown: 'Download'
+                        };
 
-                        release.appendChild(title);
-                        release.appendChild(downloadLinks);
-                        releasesContainer.appendChild(release);
+                        for (const [platform, url] of Object.entries(release.assets)) {
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.textContent = platformNames[platform] || 'Download';
+                            link.classList.add('download-btn');
+                            link.setAttribute('download', '');
+                            link.setAttribute('target', '_blank'); // Open in new tab
+                            downloadLinks.appendChild(link);
+                        }
+
+                        card.appendChild(title);
+                        card.appendChild(date);
+                        card.appendChild(downloadLinks);
+                        releasesContainer.appendChild(card);
                     });
                 })
                 .catch(error => {
