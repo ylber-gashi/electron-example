@@ -67,6 +67,29 @@ jobs:
       - name: Verify AWS CLI Installation
         run: aws --version
 
+      # Debug Variables (Optional)
+      - name: Debug Variables
+        shell: bash
+        env:
+          VERSION: ${{ steps.get_version.outputs.VERSION }}
+          PLATFORM: ""
+        run: |
+          echo "Operating System: ${{ matrix.os }}"
+          echo "Version: $VERSION"
+          # Determine PLATFORM for debugging
+          case "${{ matrix.os }}" in
+            macos-latest)
+              PLATFORM="macos"
+              ;;
+            ubuntu-latest)
+              PLATFORM="linux"
+              ;;
+            windows-latest)
+              PLATFORM="windows"
+              ;;
+          esac
+          echo "Platform Variable: $PLATFORM"
+
       # Upload Release Assets to Cloudflare R2
       - name: Upload Assets to Cloudflare R2
         shell: bash
@@ -75,8 +98,12 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
           BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+          VERSION: ${{ steps.get_version.outputs.VERSION }} # Explicitly set VERSION
         run: |
           echo "Starting upload to Cloudflare R2..."
+          echo "Platform: $PLATFORM"
+          echo "Version: $VERSION"
+          
           PLATFORM=""
           case "${{ matrix.os }}" in
             macos-latest)
@@ -90,6 +117,10 @@ jobs:
               ;;
           esac
           
-          VERSION="${{ steps.get_version.outputs.VERSION }}"
+          if [ -z "$VERSION" ]; then
+            echo "Error: VERSION is not set."
+            exit 1
+          fi
           
-          aws s3 cp out/make/ s3://$BUCKET_NAME/$PLATFORM/$VERSION/ --recursive --acl public-read  --region auto --endpoint-url $R2_ENDPOINT --debug
+          echo "Uploading to s3://$BUCKET_NAME/$PLATFORM/$VERSION/"
+          aws s3 cp out/make/ s3://$BUCKET_NAME/$PLATFORM/$VERSION/ --recursive --acl public-read --region auto --endpoint-url $R2_ENDPOINT --debug
