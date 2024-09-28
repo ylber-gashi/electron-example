@@ -21,13 +21,22 @@ jobs:
         with:
           node-version: 22
 
-      - name: Get version from tag
-        id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+      # Set VERSION for Unix-like systems
+      - name: Set VERSION (Unix)
+        if: matrix.os != 'windows-latest'
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
+      # Set VERSION for Windows
+      - name: Set VERSION (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: powershell
+        run: |
+          $version = $env:GITHUB_REF -replace 'refs/tags/v',''
+          Write-Output "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Update package.json version
         run: |
-          npm version ${{ steps.get_version.outputs.VERSION }} --no-git-tag-version
+          npm version $VERSION --no-git-tag-version
 
       - name: Install Dependencies
         run: npm ci
@@ -69,25 +78,9 @@ jobs:
 
       # Debug Variables (Optional)
       - name: Debug Variables
-        shell: bash
-        env:
-          VERSION: ${{ steps.get_version.outputs.VERSION }}
-          PLATFORM: ""
         run: |
           echo "Operating System: ${{ matrix.os }}"
           echo "Version: $VERSION"
-          # Determine PLATFORM for debugging
-          case "${{ matrix.os }}" in
-            macos-latest)
-              PLATFORM="macos"
-              ;;
-            ubuntu-latest)
-              PLATFORM="linux"
-              ;;
-            windows-latest)
-              PLATFORM="windows"
-              ;;
-          esac
           echo "Platform Variable: $PLATFORM"
 
       # Upload Release Assets to Cloudflare R2
@@ -98,11 +91,9 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
           BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
-          VERSION: ${{ steps.get_version.outputs.VERSION }} # Explicitly set VERSION
+          VERSION: ${{ env.VERSION }}  # Use the VERSION from env
         run: |
           echo "Starting upload to Cloudflare R2..."
-          echo "Platform: $PLATFORM"
-          echo "Version: $VERSION"
           
           PLATFORM=""
           case "${{ matrix.os }}" in
