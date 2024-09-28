@@ -10,7 +10,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
       - name: Check out Git repository
@@ -92,4 +92,4 @@ jobs:
           
           VERSION="${{ steps.get_version.outputs.VERSION }}"
           
-          aws s3 cp out/make/ s3://$BUCKET_NAME/$PLATFORM/$VERSION/ --recursive --acl public-read --endpoint-url $R2_ENDPOINT --debug
+          aws s3 cp out/make/ s3://$BUCKET_NAME/$PLATFORM/$VERSION/ --recursive --acl public-read  --region auto --endpoint-url $R2_ENDPOINT --debug
