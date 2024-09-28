@@ -31,6 +31,7 @@ module.exports = {
         repository: {
           owner: 'ylber-gashi',
           name: 'electron-example',
+          
         },
         prerelease: true,
       }
