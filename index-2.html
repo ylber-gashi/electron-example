@@ -231,7 +231,7 @@
             const loadingElement = document.getElementById('loading');
 
             // Replace with your Cloudflare Worker URL
-            const apiUrl = 'https://electron-example-list-release.ylberg37.workers.dev';
+            const apiUrl = 'https://example-electron-app-github-list-releases.ylberg37.workers.dev';
 
             const formatDate = (dateString) => {
                 const options = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -246,74 +246,86 @@
             };
 
             fetch(apiUrl)
-    .then(response => response.json())
-    .then(data => {
-        loadingElement.remove();
+                .then(response => response.json())
+                .then(releases => {
+                    loadingElement.remove();
 
-        const platforms = ['macos', 'windows', 'linux'];
-        
-        platforms.forEach(platform => {
-            if (!data[platform] || data[platform].length === 0) return;
+                    const platforms = {
+                        macos: [],
+                        windows: [],
+                        linux: []
+                    };
 
-            const platformSection = document.createElement('section');
-            platformSection.classList.add('platform-section');
+                    releases.forEach(release => {
+                        release.assets.forEach(asset => {
+                            const assetName = asset.name.toLowerCase();
+                            if (assetName.includes('darwin') || assetName.includes('mac')) {
+                                platforms.macos.push({ release, asset });
+                            } else if (assetName.includes('win') || assetName.endsWith('.exe')) {
+                                platforms.windows.push({ release, asset });
+                            } else if (assetName.includes('linux') || assetName.endsWith('.deb') || assetName.endsWith('.rpm')) {
+                                platforms.linux.push({ release, asset });
+                            }
+                        });
+                    });
 
-            const platformTitle = document.createElement('h2');
-            platformTitle.classList.add('platform-title');
-            platformTitle.textContent = platform.charAt(0).toUpperCase() + platform.slice(1);
-            platformSection.appendChild(platformTitle);
+                    for (const [platform, assets] of Object.entries(platforms)) {
+                        if (assets.length === 0) continue;
 
-            data[platform].forEach(release => {
-                const card = document.createElement('div');
-                card.classList.add('release-card');
+                        const platformSection = document.createElement('section');
+                        platformSection.classList.add('platform-section');
 
-                const title = document.createElement('h3');
-                title.classList.add('release-title');
-                title.textContent = `v${release.version}`;
+                        const platformTitle = document.createElement('h2');
+                        platformTitle.classList.add('platform-title');
+                        platformTitle.textContent = platform.charAt(0).toUpperCase() + platform.slice(1);
+                        platformSection.appendChild(platformTitle);
 
-                const date = document.createElement('p');
-                date.classList.add('release-date');
-                date.textContent = `Release Date: ${formatDate(release.uploaded)}`;
+                        assets.forEach(({ release, asset }) => {
+                            const card = document.createElement('div');
+                            card.classList.add('release-card');
 
-                const assetList = document.createElement('ul');
-                assetList.classList.add('asset-list');
+                            const title = document.createElement('h3');
+                            title.classList.add('release-title');
+                            title.textContent = release.name;
 
-                release.assets.forEach(asset => {
-                    // Only include .exe files for Windows
-                    if (platform === 'windows' && !asset.url.endsWith('.exe')) return;
+                            const date = document.createElement('p');
+                            date.classList.add('release-date');
+                            date.textContent = `Release Date: ${formatDate(release.published_at)}`;
 
-                    const assetItem = document.createElement('li');
-                    assetItem.classList.add('asset-item');
+                            const assetList = document.createElement('ul');
+                            assetList.classList.add('asset-list');
 
-                    const assetLink = document.createElement('a');
-                    assetLink.href = asset.url;
-                    assetLink.textContent = asset.filename;
-                    assetLink.classList.add('download-btn');
-                    assetLink.setAttribute('download', '');
-                    assetLink.setAttribute('target', '_blank');
+                            const assetItem = document.createElement('li');
+                            assetItem.classList.add('asset-item');
 
-                    const assetInfo = document.createElement('span');
-                    assetInfo.classList.add('asset-info');
-                    assetInfo.textContent = `${formatBytes(asset.size)} • ${formatDate(asset.uploaded)}`;
+                            const assetLink = document.createElement('a');
+                            assetLink.href = asset.browser_download_url;
+                            assetLink.textContent = asset.name;
+                            assetLink.classList.add('download-btn');
+                            assetLink.setAttribute('download', '');
+                            assetLink.setAttribute('target', '_blank');
 
-                    assetItem.appendChild(assetLink);
-                    assetItem.appendChild(assetInfo);
-                    assetList.appendChild(assetItem);
+                            const assetInfo = document.createElement('span');
+                            assetInfo.classList.add('asset-info');
+                            assetInfo.textContent = `${formatBytes(asset.size)} • Downloads: ${asset.download_count}`;
+
+                            assetItem.appendChild(assetLink);
+                            assetItem.appendChild(assetInfo);
+                            assetList.appendChild(assetItem);
+
+                            card.appendChild(title);
+                            card.appendChild(date);
+                            card.appendChild(assetList);
+                            platformSection.appendChild(card);
+                        });
+
+                        releasesContainer.appendChild(platformSection);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching releases:', error);
+                    loadingElement.textContent = 'Error loading releases. Please try again later.';
                 });
-
-                card.appendChild(title);
-                card.appendChild(date);
-                card.appendChild(assetList);
-                platformSection.appendChild(card);
-            });
-
-            releasesContainer.appendChild(platformSection);
-        });
-    })
-    .catch(error => {
-        console.error('Error fetching releases:', error);
-        loadingElement.textContent = 'Error loading releases. Please try again later.';
-    });
         });
     </script>
 </body>
