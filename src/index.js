@@ -8,7 +8,7 @@ console.log('Main process starting');
 // Initialize auto-update
 updateElectronApp({
   repo: 'ylber-gashi/electron-example', // Format: 'owner/repo'
-  updateInterval: '1 hour', // Check for updates every hour
+  updateInterval: '5 minutes', // Check for updates every hour
   notifyUser: true, // Notify the user when an update is available
 });
 
