@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: electron/example
+  IMAGE_NAME: ${{ github.repository }}/my-image
 
 jobs:
   docker:
