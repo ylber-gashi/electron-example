@@ -7,5 +7,5 @@ WORKDIR /app
 # Copy the current directory contents into the container at /app
 COPY . /app
 
-# Run the application
+# Run the application dsfsdf
 CMD ["python", "-c", "print('Hello, World!')"]
